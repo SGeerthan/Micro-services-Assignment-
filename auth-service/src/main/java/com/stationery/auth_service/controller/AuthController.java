@@ -7,6 +7,7 @@ import com.stationery.auth_service.dto.RegisterRequest;
 import com.stationery.auth_service.dto.LoginRequest;
 import com.stationery.auth_service.service.AuthService;
 import com.stationery.auth_service.entity.User;
+import com.stationery.auth_service.dto.AuthResponse;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -21,7 +22,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest request) {
+    public AuthResponse login(@RequestBody LoginRequest request) {
         return authService.login(request);
     }
 }

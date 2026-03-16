@@ -7,11 +7,14 @@ import com.stationery.auth_service.entity.User;
 import com.stationery.auth_service.dto.RegisterRequest;
 import com.stationery.auth_service.dto.LoginRequest;
 
+import com.stationery.auth_service.dto.AuthResponse;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final JwtService jwtService;
 
     public User register(RegisterRequest request) {
 
@@ -23,16 +26,17 @@ public class AuthService {
         return userRepository.save(user);
     }
 
-    public String login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) {
 
         User user = userRepository
                 .findByEmail(request.getEmail())
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         if(!user.getPassword().equals(request.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
 
-        return "Login Successful";
+        String token = jwtService.generateToken(user.getEmail());
+        return new AuthResponse(token);
     }
 }
