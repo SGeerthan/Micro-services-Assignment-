@@ -1,5 +1,7 @@
 package com.stationery.auth_service.service;
 
+import com.stationery.auth_service.entity.Role;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -14,11 +16,12 @@ import java.util.Map;
 @Service
 public class JwtService {
 
-    // Recommended format is an arbitrary 256-bit key for HMAC-SHA256
     private static final String SECRET = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
-    public String generateToken(String email) {
+    /** Generate token with role claim embedded */
+    public String generateToken(String email, Role role) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role.name());
         return createToken(claims, email);
     }
 
@@ -39,5 +42,14 @@ public class JwtService {
 
     public void validateToken(final String token) {
         Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token);
+    }
+
+    public String extractRole(final String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSignKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("role", String.class);
     }
 }
