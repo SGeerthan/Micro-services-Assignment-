@@ -43,8 +43,10 @@ services:
       - "8080:8080"
     depends_on:
       - auth-service
+      - product-service
     environment:
       - SPRING_CLOUD_GATEWAY_ROUTES_0_URI=http://auth-service:8081
+      - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://product-service:8082
 
   auth-service:
     build:
@@ -58,3 +60,16 @@ services:
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/users_db
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+
+  product-service:
+    build:
+      context: ./product_service
+    container_name: product-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/products_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=1409
