@@ -30,7 +30,7 @@ public class SecurityConfig {
                 // Allow Spring's internal error path (CRITICAL – prevents 403 on /error)
                 .requestMatchers("/error").permitAll()
                 // Public auth endpoints
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                .requestMatchers("/register", "/login", "/status").permitAll()
                 // Admin-only endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // Everything else requires authentication
