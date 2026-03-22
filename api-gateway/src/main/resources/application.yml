@@ -56,3 +56,15 @@ management:
   endpoint:
     gateway:
       enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+    urls:
+      - name: Auth Service
+        url: /auth/v3/api-docs
+      - name: Order Service
+        url: /order/v3/api-docs
+      - name: Product Service
+        url: /product/v3/api-docs
