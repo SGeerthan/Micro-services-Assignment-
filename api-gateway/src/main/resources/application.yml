@@ -38,6 +38,17 @@ spring:
                 name: productService
                 fallbackUri: forward:/fallback/product
 
+        - id: cart-service
+          uri: http://cart-service:8084
+          predicates:
+            - Path=/cart/**
+          filters:
+            - RewritePath=/cart/(?<segment>.*), /${segment}
+            - name: CircuitBreaker
+              args:
+                name: cartService
+                fallbackUri: forward:/fallback/cart
+
 server:
   port: 8080
 
