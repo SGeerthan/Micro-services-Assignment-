@@ -26,6 +26,23 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: stationery_user
+      POSTGRES_PASSWORD: stationery_pass
+      POSTGRES_DB: stationery_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stationery_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api-gateway:
     build:
       context: ./api-gateway
@@ -35,6 +52,7 @@ services:
     depends_on:
       - auth-service
       - order-service
+      - product-service
     environment:
       - SPRING_CLOUD_GATEWAY_ROUTES[0].ID=auth
       - SPRING_CLOUD_GATEWAY_ROUTES[0].URI=http://auth-service:8081
@@ -42,6 +60,9 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES[1].ID=order
       - SPRING_CLOUD_GATEWAY_ROUTES[1].URI=http://order-service:8082
       - SPRING_CLOUD_GATEWAY_ROUTES[1].PREDICATE_PATH=/order/**
+      - SPRING_CLOUD_GATEWAY_ROUTES[2].ID=product
+      - SPRING_CLOUD_GATEWAY_ROUTES[2].URI=http://product-service:8083
+      - SPRING_CLOUD_GATEWAY_ROUTES[2].PREDICATE_PATH=/product/**
 
   auth-service:
     build:
@@ -50,9 +71,13 @@ services:
     ports:
       - "8081:8081"
     depends_on:
+      - postgres
       - kafka
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/users_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/stationery_db
+      - SPRING_DATASOURCE_USERNAME=stationery_user
+      - SPRING_DATASOURCE_PASSWORD=stationery_pass
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
 
   order-service:
@@ -62,9 +87,28 @@ services:
     ports:
       - "8082:8082"
     depends_on:
+      - postgres
       - kafka
     environment:
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/stationery_db
+      - SPRING_DATASOURCE_USERNAME=stationery_user
+      - SPRING_DATASOURCE_PASSWORD=stationery_pass
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+
+  product-service:
+    build:
+      context: ./product-service
+    container_name: product-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/stationery_db
+      - SPRING_DATASOURCE_USERNAME=stationery_user
+      - SPRING_DATASOURCE_PASSWORD=stationery_pass
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+
+volumes:
+  postgres_data:

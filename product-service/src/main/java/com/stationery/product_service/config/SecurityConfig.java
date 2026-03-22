@@ -1,6 +1,6 @@
-package com.stationery.auth_service.config;
+package com.stationery.product_service.config;
 
-import com.stationery.auth_service.filter.JwtAuthFilter;
+import com.stationery.product_service.filter.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,8 +31,10 @@ public class SecurityConfig {
                 .requestMatchers("/error").permitAll()
                 // Allow Swagger UI and API docs (comprehensive list)
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml", "/webjars/**").permitAll()
-                // Public auth endpoints
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                // Public endpoints - All users can view products
+                .requestMatchers("/api/products/**").permitAll()
+                .requestMatchers("/api/products/available").permitAll()
+                .requestMatchers("/api/products/search/**").permitAll()
                 // Admin-only endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // Everything else requires authentication

@@ -1,7 +1,5 @@
-package com.stationery.auth_service.config;
+package com.stationery.order_service.config;
 
-import com.stationery.auth_service.filter.JwtAuthFilter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -10,14 +8,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableMethodSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
-
-    private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -31,14 +25,11 @@ public class SecurityConfig {
                 .requestMatchers("/error").permitAll()
                 // Allow Swagger UI and API docs (comprehensive list)
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml", "/webjars/**").permitAll()
-                // Public auth endpoints
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                // Admin-only endpoints
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // Public order endpoints
+                .requestMatchers("/api/orders/**").permitAll()
                 // Everything else requires authentication
                 .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            );
 
         return http.build();
     }

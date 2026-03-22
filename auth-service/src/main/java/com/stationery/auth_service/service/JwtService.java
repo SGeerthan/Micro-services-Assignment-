@@ -41,13 +41,12 @@ public class JwtService {
     }
 
     public void validateToken(final String token) {
-        Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token);
+        Jwts.parser().setSigningKey(getSignKey()).parseClaimsJws(token);
     }
 
     public String extractRole(final String token) {
-        Claims claims = Jwts.parserBuilder()
+        Claims claims = Jwts.parser()
                 .setSigningKey(getSignKey())
-                .build()
                 .parseClaimsJws(token)
                 .getBody();
         return claims.get("role", String.class);
