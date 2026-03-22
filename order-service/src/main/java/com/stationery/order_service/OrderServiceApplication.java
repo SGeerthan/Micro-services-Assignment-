@@ -1,4 +1,4 @@
-package com.stationery.order_service.demo;
+package com.stationery.order_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
