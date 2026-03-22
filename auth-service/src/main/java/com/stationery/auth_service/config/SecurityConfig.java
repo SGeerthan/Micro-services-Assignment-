@@ -32,7 +32,7 @@ public class SecurityConfig {
                 // Allow Swagger UI and API docs (comprehensive list)
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml", "/webjars/**").permitAll()
                 // Public auth endpoints
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                .requestMatchers("/register", "/login", "/status").permitAll()
                 // Admin-only endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // Everything else requires authentication

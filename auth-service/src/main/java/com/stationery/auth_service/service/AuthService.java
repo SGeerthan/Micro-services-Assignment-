@@ -20,6 +20,7 @@ public class AuthService {
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
+        user.setPhoneNumber(request.getPhoneNumber());
         user.setPassword(request.getPassword());
         // Default to ROLE_USER if no role specified in request
         user.setRole(request.getRole() != null ? request.getRole() : Role.ROLE_USER);
@@ -37,5 +38,10 @@ public class AuthService {
 
         String token = jwtService.generateToken(user.getEmail(), user.getRole());
         return new AuthResponse(token, user.getRole().name());
+    }
+
+    public User getUserInfo(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }
