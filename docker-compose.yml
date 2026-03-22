@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     container_name: zookeeper
@@ -10,21 +9,69 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    networks:
+      - microservices-network
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     container_name: kafka
     depends_on:
       - zookeeper
-    ports:
-      - "9092:9092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    networks:
+      - microservices-network
+
+  auth-service:
+    build:
+      context: ./auth-service
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - kafka
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-super-king-a15c7mhv-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+      - SPRING_DATASOURCE_USERNAME=neondb_owner
+      - SPRING_DATASOURCE_PASSWORD=npg_xZTise1Y2QcO
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SERVER_PORT=8081
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  order-service:
+    build:
+      context: ./order-service
+    container_name: order-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - kafka
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-curly-base-a8rzjasw-pooler.eastus2.azure.neon.tech:5432/neondb?sslmode=require
+      - SPRING_DATASOURCE_USERNAME=neondb_owner
+      - SPRING_DATASOURCE_PASSWORD=npg_RIPTxsdr6a8j
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SERVER_PORT=8082
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   api-gateway:
     build:
@@ -36,35 +83,15 @@ services:
       - auth-service
       - order-service
     environment:
-      - SPRING_CLOUD_GATEWAY_ROUTES[0].ID=auth
-      - SPRING_CLOUD_GATEWAY_ROUTES[0].URI=http://auth-service:8081
-      - SPRING_CLOUD_GATEWAY_ROUTES[0].PREDICATE_PATH=/auth/**
-      - SPRING_CLOUD_GATEWAY_ROUTES[1].ID=order
-      - SPRING_CLOUD_GATEWAY_ROUTES[1].URI=http://order-service:8082
-      - SPRING_CLOUD_GATEWAY_ROUTES[1].PREDICATE_PATH=/order/**
+      - SERVER_PORT=8080
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  auth-service:
-    build:
-      context: ./auth-service
-    container_name: auth-service
-    ports:
-      - "8081:8081"
-    depends_on:
-      - kafka
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/users_db
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-
-  order-service:
-    build:
-      context: ./order-service
-    container_name: order-service
-    ports:
-      - "8082:8082"
-    depends_on:
-      - kafka
-    environment:
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+networks:
+  microservices-network:
+    driver: bridge
