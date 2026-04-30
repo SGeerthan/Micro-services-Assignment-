@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, ChevronLeft } from 'lucide-react';
+import { Eye, EyeOff, ChevronLeft, User, Mail, ShieldCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../component/AuthLayout';
 import { useAuth } from '../AuthContext';
@@ -15,53 +15,86 @@ const RegisterPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Registration submitted:', formData);
-    const dummyUser = { name: formData.name, email: formData.email, role: formData.role };
-    login(dummyUser, 'dummy-token');
-    navigate('/');
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await fetch('http://localhost:8081/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Email already registered or invalid details. Please try again.');
+      }
+      
+      navigate('/login');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <AuthLayout>
       <div className="auth-header">
         <Link to="/" className="back-link">
-          <ChevronLeft className="w-5 h-5" />
-          Back
+          <ChevronLeft size={18} />
+          Back to Store
         </Link>
-        <h1 className="auth-title">Create an Account</h1>
+        <h1 className="auth-title">Join the Community</h1>
+        <p className="auth-subtitle">Create your account to start shopping</p>
       </div>
+
+      {error && (
+        <div className="error-badge">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label className="form-label">Full Name *</label>
-          <input
-            type="text"
-            className="form-input"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            required
-          />
+          <label className="form-label">Full Name</label>
+          <div className="form-input-wrapper">
+            <input
+              type="text"
+              className="form-input"
+              placeholder="John Doe"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
+          </div>
         </div>
 
         <div className="form-group">
-          <label className="form-label">Email address *</label>
-          <input
-            type="email"
-            className="form-input"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            required
-          />
+          <label className="form-label">Email Address</label>
+          <div className="form-input-wrapper">
+            <input
+              type="email"
+              className="form-input"
+              placeholder="name@example.com"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+            />
+          </div>
         </div>
 
         <div className="form-group">
-          <label className="form-label">Password *</label>
-          <div className="form-input-container">
+          <label className="form-label">Password</label>
+          <div className="form-input-wrapper">
             <input
               type={showPassword ? "text" : "password"}
               className="form-input"
+              placeholder="Create a strong password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
@@ -70,38 +103,30 @@ const RegisterPage = () => {
               className="password-toggle"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </div>
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Select Role *</label>
-          <div className="role-selector">
-            <div 
-              className={`role-option ${formData.role === 'ROLE_USER' ? 'active' : ''}`}
-              onClick={() => setFormData({ ...formData, role: 'ROLE_USER' })}
-            >
-              User
-            </div>
-            <div 
-              className={`role-option ${formData.role === 'ROLE_ADMIN' ? 'active' : ''}`}
-              onClick={() => setFormData({ ...formData, role: 'ROLE_ADMIN' })}
-            >
-              Admin
-            </div>
-          </div>
+        <div style={{ display: 'flex', gap: '10px', marginTop: '8px', padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <ShieldCheck size={18} className="text-primary" />
+          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>By registering, you agree to our Terms of Service and Privacy Policy.</p>
         </div>
 
-        <button type="submit" className="btn-auth">
-          Register
+        <button type="submit" className="btn-auth" disabled={loading}>
+          {loading ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+              <div style={{ width: '18px', height: '18px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }}></div>
+              Creating Account...
+            </div>
+          ) : 'Create Your Account'}
         </button>
 
-        <div className="mt-8 pt-6 border-t border-gray-100">
-          <p className="text-muted-foreground text-sm text-center">
+        <div style={{ textAlign: 'center', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
             Already have an account?{' '}
-            <Link to="/login" className="link-red">
-              Login here
+            <Link to="/login" className="auth-link">
+              Log in here
             </Link>
           </p>
         </div>

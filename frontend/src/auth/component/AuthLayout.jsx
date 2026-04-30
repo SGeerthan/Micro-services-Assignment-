@@ -2,8 +2,10 @@ import React from 'react';
 
 const AuthLayout = ({ children }) => {
   return (
-    <div className="auth-container animate-fade-in">
-      {children}
+    <div className="auth-wrapper">
+      <div className="auth-card">
+        {children}
+      </div>
     </div>
   );
 };
