@@ -6,7 +6,6 @@ D:\Y4S1\CTSE\Micro-services-Assignment-\cart-service\src\main\java\com\stationer
 D:\Y4S1\CTSE\Micro-services-Assignment-\cart-service\src\main\java\com\stationery\cart_service\kafka\OrderEventsListener.java
 D:\Y4S1\CTSE\Micro-services-Assignment-\cart-service\src\main\java\com\stationery\cart_service\dto\CartItemResponse.java
 D:\Y4S1\CTSE\Micro-services-Assignment-\cart-service\src\main\java\com\stationery\cart_service\service\ProductClient.java
-D:\Y4S1\CTSE\Micro-services-Assignment-\cart-service\src\main\java\com\stationery\cart_service\service\AuthServiceClient.java
 D:\Y4S1\CTSE\Micro-services-Assignment-\cart-service\src\main\java\com\stationery\cart_service\entity\Cart.java
 D:\Y4S1\CTSE\Micro-services-Assignment-\cart-service\src\main\java\com\stationery\cart_service\repository\CartRepository.java
 D:\Y4S1\CTSE\Micro-services-Assignment-\cart-service\src\main\java\com\stationery\cart_service\filter\JwtAuthFilter.java

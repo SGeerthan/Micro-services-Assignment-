@@ -1,6 +1,6 @@
 import axiosInstance from './axiosConfig';
 
-const CART_API_URL = 'http://localhost:8084/api/cart';
+const CART_API_URL = '/cart/api/cart';
 
 export const cartApi = {
   // Get the current user's cart

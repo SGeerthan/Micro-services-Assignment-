@@ -5,6 +5,8 @@ import AuthLayout from '../component/AuthLayout';
 import { useAuth } from '../AuthContext';
 import axios from 'axios';
 
+const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080';
+
 const LoginPage = () => {
   const [formData, setFormData] = useState({
     email: '',
@@ -23,7 +25,7 @@ const LoginPage = () => {
     setError('');
     
     try {
-      const response = await axios.post('http://localhost:8081/login', formData);
+      const response = await axios.post(`${GATEWAY_URL}/auth/login`, formData);
       const { token, role } = response.data;
       
       const user = { name: formData.email.split('@')[0], email: formData.email, role: role };

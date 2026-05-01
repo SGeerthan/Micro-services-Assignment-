@@ -1,6 +1,6 @@
 import axiosInstance from './axiosConfig';
 
-const ORDER_API_URL = 'http://localhost:8082/api/orders';
+const ORDER_API_URL = '/order/api/orders';
 
 export const orderApi = {
   // Create checkout session

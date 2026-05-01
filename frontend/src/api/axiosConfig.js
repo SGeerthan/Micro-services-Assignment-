@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080';
+
 // Create an Axios instance
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8083/api',
+  baseURL: GATEWAY_URL,
   headers: {
     'Content-Type': 'application/json',
   },

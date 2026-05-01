@@ -14,13 +14,11 @@ com\stationery\cart_service\controller\CartController.class
 com\stationery\cart_service\dto\CartResponse$CartResponseBuilder.class
 com\stationery\cart_service\dto\CartItemResponse$CartItemResponseBuilder.class
 com\stationery\cart_service\entity\Coupon.class
-com\stationery\cart_service\service\AuthServiceClient.class
 com\stationery\cart_service\dto\ProductClientResponse.class
 com\stationery\cart_service\filter\JwtAuthFilter.class
 com\stationery\cart_service\entity\Cart$CartBuilder.class
 com\stationery\cart_service\service\CartService.class
 com\stationery\cart_service\CartServiceApplication.class
 com\stationery\cart_service\dto\CartItemResponse.class
-com\stationery\cart_service\service\AuthServiceClient$TokenValidationResult.class
 com\stationery\cart_service\dto\CartResponse.class
 com\stationery\cart_service\repository\CartItemRepository.class

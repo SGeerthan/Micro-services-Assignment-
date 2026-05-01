@@ -1,6 +1,5 @@
 package com.stationery.product_service.filter;
 
-import com.stationery.product_service.service.AuthServiceClient;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +19,9 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final AuthServiceClient authServiceClient;
+    private static final String USER_EMAIL_HEADER = "X-User-Email";
+    private static final String USER_ROLE_HEADER = "X-User-Role";
+    private static final String AUTH_VALIDATED_HEADER = "X-Auth-Validated";
 
     /** Skip JWT filter for public and Swagger paths */
     @Override
@@ -53,19 +54,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
-            String authHeader = request.getHeader("Authorization");
+            if ("true".equalsIgnoreCase(request.getHeader(AUTH_VALIDATED_HEADER))) {
+                String email = request.getHeader(USER_EMAIL_HEADER);
+                String role = request.getHeader(USER_ROLE_HEADER);
 
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                
-                // Delegate token validation to auth-service
-                AuthServiceClient.TokenValidationResult validationResult = authServiceClient.validateToken(token);
-
-                if (validationResult.isValid()) {
-                    String email = validationResult.getUserEmail();
-                    String role = validationResult.getRole();
-
-                    // Create authority with ROLE_ prefix if not already present
+                if (email != null && role != null) {
                     String authority = role.startsWith("ROLE_") ? role : "ROLE_" + role;
                     SimpleGrantedAuthority grantedAuthority = new SimpleGrantedAuthority(authority);
 
@@ -77,10 +70,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-
             }
         } catch (Exception e) {
-            // Token validation failed, continue without authentication
+            // Gateway identity missing or malformed, continue without authentication
         }
 
         filterChain.doFilter(request, response);

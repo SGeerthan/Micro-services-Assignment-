@@ -1,6 +1,6 @@
 import axiosInstance from './axiosConfig';
 
-const ADMIN_COUPON_API_URL = 'http://localhost:8084/api/cart/admin/coupons';
+const ADMIN_COUPON_API_URL = '/cart/api/cart/admin/coupons';
 
 export const adminCouponApi = {
   getAllCoupons: async () => {

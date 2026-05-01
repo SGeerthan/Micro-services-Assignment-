@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../component/AuthLayout';
 import { useAuth } from '../AuthContext';
 
+const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080';
+
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -24,7 +26,7 @@ const RegisterPage = () => {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:8081/register', {
+      const response = await fetch(`${GATEWAY_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
