@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, ShoppingBag, Trash2, Minus, Plus, ArrowRight, Tag, AlertCircle } from 'lucide-react';
 import { cartApi } from '../api/cartApi';
 import { useCart } from '../context/CartContext';
@@ -10,6 +11,7 @@ const CartSidebar = ({ isOpen, onClose }) => {
   const [couponCode, setCouponCode] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
+  const navigate = useNavigate();
   
   const { fetchCartCount } = useCart();
 
@@ -214,7 +216,11 @@ const CartSidebar = ({ isOpen, onClose }) => {
                 <span style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--secondary)' }}>${finalAmount.toFixed(2)}</span>
               </div>
             </div>
-            <button className="btn-primary" style={{ width: '100%', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+            <button
+              className="btn-primary"
+              onClick={() => navigate('/checkout')}
+              style={{ width: '100%', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}
+            >
               Checkout Now <ArrowRight size={20} />
             </button>
           </div>

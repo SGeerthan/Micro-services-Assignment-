@@ -192,7 +192,11 @@ const CartPage = () => {
                   <span style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--primary)' }}>${totalAmount.toFixed(2)}</span>
                 </div>
                 
-                <button className="btn-checkout" style={{ background: 'var(--secondary)', height: '64px', fontSize: '1.2rem', marginTop: '40px', boxShadow: '0 10px 20px rgba(15, 23, 42, 0.15)' }}>
+                <button 
+                  className="btn-checkout" 
+                  onClick={() => navigate('/checkout')}
+                  style={{ background: 'var(--secondary)', height: '64px', fontSize: '1.2rem', marginTop: '40px', boxShadow: '0 10px 20px rgba(15, 23, 42, 0.15)' }}
+                >
                   Checkout Now <ArrowRight size={24} />
                 </button>
                 

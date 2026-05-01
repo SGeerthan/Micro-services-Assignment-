@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Search, User, ShoppingCart, LogOut, Settings, ShoppingBag } from 'lucide-react';
+import { Menu, Search, User, ShoppingCart, LogOut, Settings, ShoppingBag, Package } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -72,6 +72,10 @@ const Navbar = () => {
                 <ShoppingCart size={22} />
                 {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
               </button>
+
+              <Link to="/orders" className="nav-icon-btn" title="Order History">
+                <Package size={22} />
+              </Link>
 
               <button onClick={handleLogout} className="nav-icon-btn" title="Logout">
                 <LogOut size={22} />

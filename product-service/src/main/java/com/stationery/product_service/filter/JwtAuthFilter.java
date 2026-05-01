@@ -1,6 +1,6 @@
 package com.stationery.product_service.filter;
 
-import com.stationery.product_service.service.JwtService;
+import com.stationery.product_service.service.AuthServiceClient;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +20,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private final AuthServiceClient authServiceClient;
 
     /** Skip JWT filter for public and Swagger paths */
     @Override
@@ -57,22 +57,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
-                jwtService.validateToken(token);
+                
+                // Delegate token validation to auth-service
+                AuthServiceClient.TokenValidationResult validationResult = authServiceClient.validateToken(token);
 
-                String role = jwtService.extractRole(token);
-                String email = jwtService.extractEmail(token);
+                if (validationResult.isValid()) {
+                    String email = validationResult.getUserEmail();
+                    String role = validationResult.getRole();
 
-                // Create authority with ROLE_ prefix if not already present
-                String authority = role.startsWith("ROLE_") ? role : "ROLE_" + role;
-                SimpleGrantedAuthority grantedAuthority = new SimpleGrantedAuthority(authority);
+                    // Create authority with ROLE_ prefix if not already present
+                    String authority = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+                    SimpleGrantedAuthority grantedAuthority = new SimpleGrantedAuthority(authority);
 
-                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    Authentication authentication = new UsernamePasswordAuthenticationToken(
                         email,
                         null,
                         Collections.singletonList(grantedAuthority)
-                );
+                    );
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+
             }
         } catch (Exception e) {
             // Token validation failed, continue without authentication

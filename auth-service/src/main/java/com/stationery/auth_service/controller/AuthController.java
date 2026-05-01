@@ -3,9 +3,11 @@ package com.stationery.auth_service.controller;
 import com.stationery.auth_service.dto.AuthResponse;
 import com.stationery.auth_service.dto.LoginRequest;
 import com.stationery.auth_service.dto.RegisterRequest;
+import com.stationery.auth_service.dto.TokenValidationResponse;
 import com.stationery.auth_service.entity.User;
 import com.stationery.auth_service.repository.UserRepository;
 import com.stationery.auth_service.service.AuthService;
+import com.stationery.auth_service.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +21,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserRepository userRepository;
+    private final JwtService jwtService;
 
     // ─── Public Endpoints ──────────────────────────────────────────────────────
     @GetMapping("/status")
@@ -36,6 +39,43 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    /**
+     * Validate JWT token from other microservices
+     * This is the central validation point for all services
+     * Internal use only - called by other microservices
+     */
+    @PostMapping("/api/auth/validate-token")
+    public ResponseEntity<TokenValidationResponse> validateToken(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.ok(TokenValidationResponse.builder()
+                        .valid(false)
+                        .message("Missing or invalid Authorization header")
+                        .build());
+            }
+
+            String token = authHeader.substring(7);
+            jwtService.validateToken(token);
+
+            String userEmail = jwtService.extractEmail(token);
+            String role = jwtService.extractRole(token);
+
+            return ResponseEntity.ok(TokenValidationResponse.builder()
+                    .valid(true)
+                    .userEmail(userEmail)
+                    .role(role)
+                    .message("Token is valid")
+                    .build());
+
+        } catch (Exception e) {
+            return ResponseEntity.ok(TokenValidationResponse.builder()
+                    .valid(false)
+                    .message("Token validation failed: " + e.getMessage())
+                    .build());
+        }
     }
 
     // ─── User Endpoints (any authenticated user) ────────────────────────────
