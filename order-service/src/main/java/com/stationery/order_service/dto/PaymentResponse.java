@@ -14,8 +14,6 @@ import java.time.LocalDateTime;
 public class PaymentResponse {
     private Long id;
     private Long orderId;
-    private String stripePaymentIntentId;
-    private String stripeSessionId;
     private Double amount;
     private String status;
     private String paymentMethod;

@@ -25,15 +25,14 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final PaymentRepository paymentRepository;
-    private final StripeService stripeService;
     private final CartClient cartClient;
     private final OrderEventProducer orderEventProducer;
 
     /**
-     * Create an order from checkout request and generate Stripe checkout session
+     * Create an order from checkout request and mark it as paid after confirmation.
      */
     @Transactional
-    public CheckoutSessionResponse createCheckout(CheckoutRequest request) {
+    public OrderResponse createCheckout(CheckoutRequest request) {
         try {
             // Create order entity
             Order order = new Order();
@@ -56,12 +55,13 @@ public class OrderService {
 
             // Save order
             Order savedOrder = orderRepository.save(order);
+            final Order orderForItems = savedOrder;
 
             // Save order items
             List<OrderItem> orderItems = request.getItems().stream()
                     .map(itemRequest -> {
                         OrderItem item = new OrderItem();
-                        item.setOrder(savedOrder);
+                        item.setOrder(orderForItems);
                         item.setProductId(itemRequest.getProductId());
                         item.setProductName(itemRequest.getProductName());
                         item.setProductPrice(itemRequest.getProductPrice());
@@ -79,75 +79,27 @@ public class OrderService {
             Payment payment = new Payment();
             payment.setOrder(savedOrder);
             payment.setAmount(savedOrder.getTotalAmount());
-            payment.setStatus("PENDING");
+            payment.setStatus("COMPLETED");
+            payment.setPaymentMethod("ONLINE");
             payment.setCreatedAt(LocalDateTime.now());
             payment.setUpdatedAt(LocalDateTime.now());
+            payment.setCompletedAt(LocalDateTime.now());
             
             Payment savedPayment = paymentRepository.save(payment);
             savedOrder.setPayments(List.of(savedPayment));
+            savedOrder.setStatus("PAID");
+            savedOrder.setPaidAt(LocalDateTime.now());
+            savedOrder.setUpdatedAt(LocalDateTime.now());
 
             // Publish order created event
             orderEventProducer.publishOrderCreated(savedOrder);
-
-            // Create Stripe checkout session
-            CheckoutSessionResponse sessionResponse = stripeService.createCheckoutSession(savedOrder);
             
-            log.info("Checkout session created for order: {}", savedOrder.getId());
-            return sessionResponse;
+            log.info("Order created and marked paid: {}", savedOrder.getId());
+            return mapOrderToResponse(savedOrder);
 
         } catch (Exception e) {
             log.error("Error creating checkout: {}", e.getMessage());
             throw new RuntimeException("Failed to create checkout: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Confirm payment after successful Stripe payment
-     */
-    @Transactional
-    public OrderResponse confirmPayment(CreatePaymentRequest request) {
-        try {
-            Order order = orderRepository.findById(request.getOrderId())
-                    .orElseThrow(() -> new RuntimeException("Order not found"));
-
-            // Get session status from Stripe
-            String paymentStatus = stripeService.getSessionStatus(request.getSessionId());
-
-            if ("paid".equals(paymentStatus)) {
-                order.setStatus("PAID");
-                order.setPaidAt(LocalDateTime.now());
-                order.setUpdatedAt(LocalDateTime.now());
-
-                Order savedOrder = orderRepository.save(order);
-
-                // Update payment record
-                Payment payment = paymentRepository.findByStripeSessionId(request.getSessionId())
-                        .orElseThrow(() -> new RuntimeException("Payment not found"));
-                payment.setStatus("COMPLETED");
-                payment.setStripeSessionId(request.getSessionId());
-                payment.setCompletedAt(LocalDateTime.now());
-                payment.setUpdatedAt(LocalDateTime.now());
-
-                paymentRepository.save(payment);
-
-                // Publish order paid event
-                orderEventProducer.publishOrderPaid(savedOrder);
-
-                // Clear user's cart
-                try {
-                    cartClient.clearCart();
-                } catch (Exception e) {
-                    log.warn("Could not clear cart: {}", e.getMessage());
-                }
-
-                return mapOrderToResponse(savedOrder);
-            } else {
-                throw new RuntimeException("Payment not completed. Status: " + paymentStatus);
-            }
-
-        } catch (Exception e) {
-            log.error("Error confirming payment: {}", e.getMessage());
-            throw new RuntimeException("Failed to confirm payment: " + e.getMessage());
         }
     }
 
@@ -244,8 +196,6 @@ public class OrderService {
         return PaymentResponse.builder()
                 .id(payment.getId())
                 .orderId(payment.getOrder().getId())
-                .stripePaymentIntentId(payment.getStripePaymentIntentId())
-                .stripeSessionId(payment.getStripeSessionId())
                 .amount(payment.getAmount())
                 .status(payment.getStatus())
                 .paymentMethod(payment.getPaymentMethod())

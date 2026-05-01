@@ -11,7 +11,6 @@ import ProductForm from './pages/ProductForm';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
-import PaymentCancelledPage from './pages/PaymentCancelledPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
 import './App.css';
 
@@ -29,7 +28,6 @@ function App() {
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/payment-success" element={<PaymentSuccessPage />} />
-              <Route path="/payment-cancelled" element={<PaymentCancelledPage />} />
               <Route path="/orders" element={<OrderHistoryPage />} />
               
               {/* Admin Routes */}

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { cartApi } from '../api/cartApi';
 import { orderApi } from '../api/orderApi';
 import { ArrowLeft, Loader } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import PaymentConfirmationModal from '../components/PaymentConfirmationModal';
 import '../pages/CheckoutPage.css';
 
 const CheckoutPage = () => {
@@ -15,6 +16,8 @@ const CheckoutPage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingOrder, setPendingOrder] = useState(null);
   
   const [formData, setFormData] = useState({
     shippingAddress: '',
@@ -103,17 +106,32 @@ const CheckoutPage = () => {
         billingCountry: formData.sameAsBilling ? formData.shippingCountry : formData.billingCountry,
       };
 
-      const sessionResponse = await orderApi.createCheckout(checkoutData);
-
-      if (sessionResponse.checkoutUrl) {
-        // Redirect to Stripe checkout
-        window.location.href = sessionResponse.checkoutUrl;
-      } else {
-        setError('Failed to initiate checkout');
-      }
+      setPendingOrder(checkoutData);
+      setShowConfirmation(true);
     } catch (err) {
       console.error('Checkout error:', err);
-      setError(err.response?.data?.message || 'Failed to create checkout session');
+      setError(err.response?.data?.message || 'Failed to prepare checkout');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!pendingOrder) {
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError('');
+      const orderResponse = await orderApi.createCheckout(pendingOrder);
+      await cartApi.clearCart();
+      setShowConfirmation(false);
+      setPendingOrder(null);
+      navigate('/payment-success', { state: { orderData: orderResponse } });
+    } catch (err) {
+      console.error('Payment confirmation error:', err);
+      setError(err.response?.data?.message || 'Failed to confirm payment');
     } finally {
       setSubmitting(false);
     }
@@ -332,7 +350,7 @@ const CheckoutPage = () => {
                     <Loader size={20} className="inline-spin" /> Processing...
                   </>
                 ) : (
-                  'Proceed to Payment'
+                  'Pay Now'
                 )}
               </button>
 
@@ -343,6 +361,15 @@ const CheckoutPage = () => {
           </div>
         </div>
       </main>
+
+      <PaymentConfirmationModal
+        isOpen={showConfirmation}
+        orderData={pendingOrder}
+        loading={submitting}
+        error={error}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={handleConfirmPayment}
+      />
 
       <Footer />
     </div>

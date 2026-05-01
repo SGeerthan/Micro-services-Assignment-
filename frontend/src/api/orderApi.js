@@ -3,18 +3,9 @@ import axiosInstance from './axiosConfig';
 const ORDER_API_URL = '/order/api/orders';
 
 export const orderApi = {
-  // Create checkout session
+  // Create order after user confirmation
   createCheckout: async (checkoutData) => {
     const response = await axiosInstance.post(`${ORDER_API_URL}/checkout`, checkoutData);
-    return response.data;
-  },
-
-  // Confirm payment after Stripe checkout
-  confirmPayment: async (orderId, sessionId) => {
-    const response = await axiosInstance.post(`${ORDER_API_URL}/payment/confirm`, {
-      orderId,
-      sessionId
-    });
     return response.data;
   },
 

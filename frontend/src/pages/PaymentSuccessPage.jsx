@@ -1,60 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { orderApi } from '../api/orderApi';
-import PaymentConfirmationModal from '../components/PaymentConfirmationModal';
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { CheckCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import './PaymentCancelledPage.css';
 
 const PaymentSuccessPage = () => {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
-  const [orderData, setOrderData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showModal, setShowModal] = useState(true);
+  const orderData = location.state?.orderData;
 
-  useEffect(() => {
-    const orderId = searchParams.get('orderId');
-    const sessionId = searchParams.get('sessionId');
-
-    if (!orderId || !sessionId) {
-      setError('Invalid payment parameters');
-      setLoading(false);
-      return;
-    }
-
-    confirmPayment(orderId, sessionId);
-  }, [searchParams]);
-
-  const confirmPayment = async (orderId, sessionId) => {
-    try {
-      setLoading(true);
-      const response = await orderApi.confirmPayment(orderId, sessionId);
-      setOrderData(response);
-      setLoading(false);
-    } catch (err) {
-      console.error('Error confirming payment:', err);
-      setError(err.response?.data?.message || 'Failed to confirm payment');
-      setLoading(false);
-    }
-  };
-
-  const handleModalClose = () => {
-    setShowModal(false);
+  const handleContinueShopping = () => {
     navigate('/');
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="payment-cancelled-page">
       <Navbar />
-      <div style={{ flex: 1 }}></div>
-      <PaymentConfirmationModal 
-        isOpen={showModal}
-        orderData={orderData}
-        loading={loading}
-        error={error}
-        onClose={handleModalClose}
-      />
+
+      <main className="cancelled-container">
+        <div className="cancelled-content">
+          <CheckCircle size={80} className="cancelled-icon" />
+          <h1>Payment Successful</h1>
+          <p className="cancelled-message">
+            Your order has been confirmed successfully.
+          </p>
+
+          {orderData?.id && (
+            <p className="order-id">Order ID: #{orderData.id}</p>
+          )}
+
+          <div className="action-buttons">
+            <button className="btn-primary" onClick={handleContinueShopping}>
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </main>
+
       <Footer />
     </div>
   );

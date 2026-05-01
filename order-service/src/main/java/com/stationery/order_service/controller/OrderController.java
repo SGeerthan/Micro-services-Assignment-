@@ -18,26 +18,16 @@ public class OrderController {
     private final OrderService orderService;
 
     /**
-     * Create checkout - initiates order and generates Stripe session
+     * Create checkout - persists the order as paid after user confirmation.
      */
     @PostMapping("/checkout")
-    public ResponseEntity<CheckoutSessionResponse> createCheckout(
+    public ResponseEntity<OrderResponse> createCheckout(
             Authentication authentication,
             @RequestBody CheckoutRequest request) {
         String userEmail = authentication.getName();
         request.setUserEmail(userEmail);
-        CheckoutSessionResponse response = orderService.createCheckout(request);
+        OrderResponse response = orderService.createCheckout(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    /**
-     * Confirm payment after successful Stripe payment
-     */
-    @PostMapping("/payment/confirm")
-    public ResponseEntity<OrderResponse> confirmPayment(
-            @RequestBody CreatePaymentRequest request) {
-        OrderResponse response = orderService.confirmPayment(request);
-        return ResponseEntity.ok(response);
     }
 
     /**

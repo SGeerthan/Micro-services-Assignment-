@@ -21,9 +21,6 @@ public class Payment {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    private String stripePaymentIntentId;
-    private String stripeSessionId;
-    
     private Double amount;
     
     private String status; // PENDING, COMPLETED, FAILED, CANCELLED
