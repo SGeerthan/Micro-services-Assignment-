@@ -1,42 +1,61 @@
 spring:
   application:
     name: api-gateway
-
   cloud:
     gateway:
+      httpclient:
+        connect-timeout: 10000
+        response-timeout: 15000
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:5173"
+              - "http://127.0.0.1:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "Authorization"
+              - "Content-Type"
+              - "X-Correlation-Id"
+            allowCredentials: true
+            maxAge: 3600
       routes:
         - id: auth-service
-          uri: http://auth-service.internal:8081   # updated
+          uri: ${AUTH_SERVICE_URL}
           predicates:
             - Path=/auth/**
           filters:
             - RewritePath=/auth/(?<segment>.*), /${segment}
-            - name: CircuitBreaker
-              args:
-                name: authService
-                fallbackUri: forward:/fallback/auth
 
         - id: order-service
-          uri: http://order-service.internal:8082  # updated
+          uri: ${ORDER_SERVICE_URL}
           predicates:
             - Path=/order/**
           filters:
             - RewritePath=/order/(?<segment>.*), /${segment}
-            - name: CircuitBreaker
-              args:
-                name: orderService
-                fallbackUri: forward:/fallback/order
 
         - id: product-service
-          uri: http://product-service.internal:8083  # updated
+          uri: ${PRODUCT_SERVICE_URL}
           predicates:
             - Path=/product/**
           filters:
             - RewritePath=/product/(?<segment>.*), /${segment}
-            - name: CircuitBreaker
-              args:
-                name: productService
-                fallbackUri: forward:/fallback/product
+
+        - id: cart-service
+          uri: ${CART_SERVICE_URL}
+          predicates:
+            - Path=/cart/**
+          filters:
+            - RewritePath=/cart/(?<segment>.*), /${segment}
 
 server:
   port: 8080
@@ -68,3 +87,5 @@ springdoc:
         url: /order/v3/api-docs
       - name: Product Service
         url: /product/v3/api-docs
+      - name: Cart Service
+        url: /cart/v3/api-docs

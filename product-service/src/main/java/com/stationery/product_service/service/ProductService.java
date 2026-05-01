@@ -92,4 +92,22 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found with name: " + name));
         return ProductResponse.fromEntity(product);
     }
+
+    // Decrement stock for a product. If stock would go negative, set availability to false and set stock to 0.
+    public void decrementStock(Long productId, int quantity) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+
+        Integer current = product.getStock() == null ? 0 : product.getStock();
+        int updated = current - quantity;
+        if (updated <= 0) {
+            product.setStock(0);
+            product.setAvailability(false);
+        } else {
+            product.setStock(updated);
+        }
+
+        product.setUpdatedAt(System.currentTimeMillis());
+        productRepository.save(product);
+    }
 }

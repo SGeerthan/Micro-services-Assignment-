@@ -33,6 +33,8 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml", "/webjars/**").permitAll()
                 // Public auth endpoints
                 .requestMatchers("/register", "/login", "/status").permitAll()
+                // Internal token validation endpoint (called by API Gateway)
+                .requestMatchers("/api/auth/validate-token").permitAll()
                 // Admin-only endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // Everything else requires authentication

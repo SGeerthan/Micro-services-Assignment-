@@ -34,4 +34,7 @@ public class Product {
 
     @Column(nullable = false)
     private Long updatedAt = System.currentTimeMillis();
+
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private Integer stock = 0;
 }

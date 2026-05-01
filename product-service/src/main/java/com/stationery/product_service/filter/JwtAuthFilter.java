@@ -1,6 +1,5 @@
 package com.stationery.product_service.filter;
 
-import com.stationery.product_service.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +19,9 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private static final String USER_EMAIL_HEADER = "X-User-Email";
+    private static final String USER_ROLE_HEADER = "X-User-Role";
+    private static final String AUTH_VALIDATED_HEADER = "X-Auth-Validated";
 
     /** Skip JWT filter for public and Swagger paths */
     @Override
@@ -53,29 +54,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
-            String authHeader = request.getHeader("Authorization");
+            if ("true".equalsIgnoreCase(request.getHeader(AUTH_VALIDATED_HEADER))) {
+                String email = request.getHeader(USER_EMAIL_HEADER);
+                String role = request.getHeader(USER_ROLE_HEADER);
 
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                jwtService.validateToken(token);
+                if (email != null && role != null) {
+                    String authority = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+                    SimpleGrantedAuthority grantedAuthority = new SimpleGrantedAuthority(authority);
 
-                String role = jwtService.extractRole(token);
-                String email = jwtService.extractEmail(token);
-
-                // Create authority with ROLE_ prefix if not already present
-                String authority = role.startsWith("ROLE_") ? role : "ROLE_" + role;
-                SimpleGrantedAuthority grantedAuthority = new SimpleGrantedAuthority(authority);
-
-                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    Authentication authentication = new UsernamePasswordAuthenticationToken(
                         email,
                         null,
                         Collections.singletonList(grantedAuthority)
-                );
+                    );
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
         } catch (Exception e) {
-            // Token validation failed, continue without authentication
+            // Gateway identity missing or malformed, continue without authentication
         }
 
         filterChain.doFilter(request, response);

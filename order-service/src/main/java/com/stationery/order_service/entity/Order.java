@@ -1,15 +1,11 @@
 package com.stationery.order_service.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.persistence.*;
-        import lombok.*;
-        import java.time.LocalDateTime;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -22,11 +18,32 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
+    private String userEmail;
+    
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<OrderItem> items;
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Payment> payments;
+
+    private Double subtotalAmount;
+    private Double taxAmount;
+    private Double shippingAmount;
     private Double totalAmount;
 
-    private String status; // PLACED, PAID, SHIPPED
+    private String status; // PENDING, CONFIRMED, PAID, SHIPPED, DELIVERED, CANCELLED
+
+    private String shippingAddress;
+    private String shippingCity;
+    private String shippingZipCode;
+    private String shippingCountry;
+    
+    private String billingAddress;
+    private String billingCity;
+    private String billingZipCode;
+    private String billingCountry;
 
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime paidAt;
 }
