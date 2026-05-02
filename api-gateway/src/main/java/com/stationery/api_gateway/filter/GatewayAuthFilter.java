@@ -35,12 +35,28 @@ public class GatewayAuthFilter implements GlobalFilter, Ordered {
 
     @Value("${AUTH_SERVICE_URL}")
     private String authServiceUrl;
+    @Value("${AUTH_BYPASS:false}")
+    private boolean authBypass;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getPath().value();
         String correlationId = resolveCorrelationId(request);
+        // Dev bypass: if enabled, inject fake validated headers and continue
+        if (authBypass) {
+            ServerHttpRequest mutatedRequest = request.mutate()
+                    .headers(headers -> {
+                        headers.set(CORRELATION_ID_HEADER, correlationId);
+                        headers.set(USER_EMAIL_HEADER, "dev@local");
+                        headers.set(USER_ROLE_HEADER, "ROLE_USER");
+                        headers.set(USER_ROLES_HEADER, "ROLE_USER");
+                        headers.set(AUTH_VALIDATED_HEADER, "true");
+                    })
+                    .build();
+
+            return chain.filter(exchange.mutate().request(mutatedRequest).build());
+        }
 
         if (isPublicRequest(request)) {
             return chain.filter(withCorrelationId(exchange, correlationId));
