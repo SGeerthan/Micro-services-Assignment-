@@ -10,6 +10,8 @@ const apiClient = axios.create({
   },
 });
 
+// Plain client without interceptors for internal validation calls
+const plainClient = axios.create({ baseURL: GATEWAY_URL });
 // Request interceptor to add the JWT token to headers
 apiClient.interceptors.request.use(
   (config) => {
@@ -29,11 +31,41 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Handle unauthorized (e.g., clear token, redirect to login)
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Avoid immediate logout on transient gateway/back-end failures.
+      // Do a one-time token validation call to confirm the token is actually invalid.
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+
+        // Make a validation request without this interceptor
+        return plainClient
+          .post('/auth/validate-token', null, { headers: { Authorization: `Bearer ${token}` } })
+          .then((res) => {
+            if (res && res.data && res.data.valid === true) {
+              // Token is valid — original 401 was likely transient or permission-related.
+              return Promise.reject(error);
+            }
+
+            // Token invalid — clear and redirect
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+            return Promise.reject(error);
+          })
+          .catch(() => {
+            // Validation call failed (gateway/back-end issue). Do NOT log the user out.
+            return Promise.reject(error);
+          });
+      } catch (e) {
+        return Promise.reject(error);
+      }
     }
+
     return Promise.reject(error);
   }
 );

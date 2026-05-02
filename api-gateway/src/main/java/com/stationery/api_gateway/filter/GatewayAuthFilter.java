@@ -122,6 +122,16 @@ public class GatewayAuthFilter implements GlobalFilter, Ordered {
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
         exchange.getResponse().getHeaders().set(CORRELATION_ID_HEADER, correlationId);
+        // Add CORS headers so browser preflight / error responses are accepted by the client
+        String origin = exchange.getRequest().getHeaders().getFirst(HttpHeaders.ORIGIN);
+        if (origin != null && !origin.isBlank()) {
+            exchange.getResponse().getHeaders().set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+        } else {
+            exchange.getResponse().getHeaders().set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        }
+        exchange.getResponse().getHeaders().set(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+        exchange.getResponse().getHeaders().set(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET,POST,PUT,DELETE,OPTIONS,PATCH");
+        exchange.getResponse().getHeaders().set(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "*");
         byte[] body = ("{\"valid\":false,\"message\":\"" + message + "\"}").getBytes();
         return exchange.getResponse().writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(body)));
     }
