@@ -14,6 +14,7 @@ const ProductForm = () => {
     name: '',
     description: '',
     price: '',
+    stock: '',
     imageUrl: '',
     availability: true,
   });
@@ -35,6 +36,7 @@ const ProductForm = () => {
         name: data.name,
         description: data.description,
         price: data.price,
+        stock: data.stock,
         imageUrl: data.imageUrl,
         availability: data.availability,
       });
@@ -62,6 +64,7 @@ const ProductForm = () => {
       const payload = {
         ...formData,
         price: parseFloat(formData.price),
+        stock: parseInt(formData.stock),
       };
 
       if (isEditMode) {
@@ -154,18 +157,33 @@ const ProductForm = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Inventory Status</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f8fafc', padding: '12px 16px', borderRadius: '14px', border: '1.5px solid #e2e8f0' }}>
-                    <input
-                      type="checkbox"
-                      id="availability"
-                      name="availability"
-                      checked={formData.availability}
-                      onChange={handleChange}
-                      style={{ width: '20px', height: '20px', accentColor: 'var(--primary)' }}
-                    />
-                    <label htmlFor="availability" style={{ fontWeight: '600', color: 'var(--secondary)', cursor: 'pointer', margin: 0 }}>Available for Sale</label>
-                  </div>
+                  <label className="form-label">Stock Quantity</label>
+                  <input
+                    type="number"
+                    name="stock"
+                    value={formData.stock}
+                    onChange={handleChange}
+                    required
+                    min="0"
+                    step="1"
+                    className="form-input"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Inventory Status</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f8fafc', padding: '12px 16px', borderRadius: '14px', border: '1.5px solid #e2e8f0' }}>
+                  <input
+                    type="checkbox"
+                    id="availability"
+                    name="availability"
+                    checked={formData.availability}
+                    onChange={handleChange}
+                    style={{ width: '20px', height: '20px', accentColor: 'var(--primary)' }}
+                  />
+                  <label htmlFor="availability" style={{ fontWeight: '600', color: 'var(--secondary)', cursor: 'pointer', margin: 0 }}>Available for Sale</label>
                 </div>
               </div>
 
