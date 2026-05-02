@@ -21,6 +21,12 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -33,6 +39,14 @@ jobs:
 
       - name: Log in to Azure Container Registry
         run: az acr login --name $ACR_NAME
+
+      - name: Build Java service JARs
+        run: |
+          mvn -q -DskipTests clean package -f ./auth-service/pom.xml
+          mvn -q -DskipTests clean package -f ./order-service/pom.xml
+          mvn -q -DskipTests clean package -f ./product-service/pom.xml
+          mvn -q -DskipTests clean package -f ./cart-service/pom.xml
+          mvn -q -DskipTests clean package -f ./api-gateway/pom.xml
 
       # Build and push service images
       - name: Build and push auth-service image
