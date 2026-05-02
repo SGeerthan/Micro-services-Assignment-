@@ -43,6 +43,12 @@ jobs:
       - name: Snyk test - api-gateway
         run: snyk test ./api-gateway --severity-threshold=high
 
+      - name: Snyk test - cart-service
+        run: snyk test ./cart-service --severity-threshold=high
+
+      - name: Snyk test - product-service
+        run: snyk test ./product-service --severity-threshold=high
+
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:

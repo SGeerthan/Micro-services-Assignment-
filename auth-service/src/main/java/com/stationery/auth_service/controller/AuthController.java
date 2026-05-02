@@ -9,6 +9,10 @@ import com.stationery.auth_service.repository.UserRepository;
 import com.stationery.auth_service.service.AuthService;
 import com.stationery.auth_service.service.JwtService;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +21,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Auth Service", description = "Authentication, authorization, and user profile endpoints")
 public class AuthController {
 
     private final AuthService authService;
@@ -25,18 +30,29 @@ public class AuthController {
 
     // ─── Public Endpoints ──────────────────────────────────────────────────────
     @GetMapping("/status")
+    @Operation(summary = "Service health check", description = "Returns a simple status message confirming the auth service is running")
     public ResponseEntity<String> status() {
         return ResponseEntity.ok("Auth Service is up and running");
     }
 
     /** Register a new user (or admin if role=ROLE_ADMIN is passed) */
     @PostMapping("/register")
+    @Operation(summary = "Register user", description = "Creates a new user account")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User registered successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid registration request")
+    })
     public ResponseEntity<User> register(@RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }
 
     /** Login and receive JWT + role */
     @PostMapping("/login")
+    @Operation(summary = "Login user", description = "Authenticates a user and returns a JWT response")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Login successful"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
@@ -47,6 +63,11 @@ public class AuthController {
      * Internal use only - called by other microservices
      */
     @PostMapping("/api/auth/validate-token")
+        @Operation(summary = "Validate JWT token", description = "Validates a bearer token for downstream microservices")
+        @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Token validation result returned"),
+            @ApiResponse(responseCode = "400", description = "Missing or invalid authorization header")
+        })
     public ResponseEntity<TokenValidationResponse> validateToken(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
@@ -83,6 +104,7 @@ public class AuthController {
     /** Returns the currently authenticated user's email (from JWT subject) */
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get current user email", description = "Returns the authenticated user's email from the JWT subject")
     public ResponseEntity<String> me(java.security.Principal principal) {
         return ResponseEntity.ok("Logged in as: " + principal.getName());
     }
@@ -90,6 +112,7 @@ public class AuthController {
     /** Returns the currently authenticated user's full profile */
     @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get current user profile", description = "Returns the authenticated user's profile")
     public ResponseEntity<User> getProfile(java.security.Principal principal) {
         return ResponseEntity.ok(authService.getUserInfo(principal.getName()));
     }
@@ -99,6 +122,7 @@ public class AuthController {
     /** List all registered users – ADMIN only */
     @GetMapping("/api/admin/users")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "List all users", description = "Returns all registered users and is restricted to admins")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userRepository.findAll());
     }
