@@ -16,6 +16,7 @@ jobs:
       RESOURCE_GROUP: ctsegrp-rg
       ACR_NAME: sliitmicroregistryctse
       CONTAINERAPPS_ENVIRONMENT: micro-env
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
     steps:
       - name: Checkout repo
@@ -31,9 +32,6 @@ jobs:
 
       - name: Install Snyk CLI
         run: npm install -g snyk
-
-      - name: Authenticate Snyk
-        run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
       # Scan all services
       - name: Snyk test - auth-service
