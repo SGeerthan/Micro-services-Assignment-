@@ -17,6 +17,7 @@ jobs:
       ACR_NAME: sliitmicroregistryctse
       CONTAINERAPPS_ENVIRONMENT: micro-env
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      IMAGE_TAG: ${{ github.sha }}
 
     steps:
       - name: Checkout repo
@@ -79,28 +80,38 @@ jobs:
       # Build and push service images
       - name: Build and push auth-service image
         run: |
-          docker build -t $ACR_NAME.azurecr.io/auth-service:v1 ./auth-service
-          docker push $ACR_NAME.azurecr.io/auth-service:v1
+          docker build -t $ACR_NAME.azurecr.io/auth-service:$IMAGE_TAG ./auth-service
+          docker tag $ACR_NAME.azurecr.io/auth-service:$IMAGE_TAG $ACR_NAME.azurecr.io/auth-service:latest
+          docker push $ACR_NAME.azurecr.io/auth-service:$IMAGE_TAG
+          docker push $ACR_NAME.azurecr.io/auth-service:latest
 
       - name: Build and push order-service image
         run: |
-          docker build -t $ACR_NAME.azurecr.io/order-service:v1 ./order-service
-          docker push $ACR_NAME.azurecr.io/order-service:v1
+          docker build -t $ACR_NAME.azurecr.io/order-service:$IMAGE_TAG ./order-service
+          docker tag $ACR_NAME.azurecr.io/order-service:$IMAGE_TAG $ACR_NAME.azurecr.io/order-service:latest
+          docker push $ACR_NAME.azurecr.io/order-service:$IMAGE_TAG
+          docker push $ACR_NAME.azurecr.io/order-service:latest
 
       - name: Build and push product-service image
         run: |
-          docker build -t $ACR_NAME.azurecr.io/product-service:v1 ./product-service
-          docker push $ACR_NAME.azurecr.io/product-service:v1
+          docker build -t $ACR_NAME.azurecr.io/product-service:$IMAGE_TAG ./product-service
+          docker tag $ACR_NAME.azurecr.io/product-service:$IMAGE_TAG $ACR_NAME.azurecr.io/product-service:latest
+          docker push $ACR_NAME.azurecr.io/product-service:$IMAGE_TAG
+          docker push $ACR_NAME.azurecr.io/product-service:latest
 
       - name: Build and push cart-service image
         run: |
-          docker build -t $ACR_NAME.azurecr.io/cart-service:v1 ./cart-service
-          docker push $ACR_NAME.azurecr.io/cart-service:v1
+          docker build -t $ACR_NAME.azurecr.io/cart-service:$IMAGE_TAG ./cart-service
+          docker tag $ACR_NAME.azurecr.io/cart-service:$IMAGE_TAG $ACR_NAME.azurecr.io/cart-service:latest
+          docker push $ACR_NAME.azurecr.io/cart-service:$IMAGE_TAG
+          docker push $ACR_NAME.azurecr.io/cart-service:latest
 
       - name: Build and push api-gateway image
         run: |
-          docker build -t $ACR_NAME.azurecr.io/api-gateway:v1 ./api-gateway
-          docker push $ACR_NAME.azurecr.io/api-gateway:v1
+          docker build -t $ACR_NAME.azurecr.io/api-gateway:$IMAGE_TAG ./api-gateway
+          docker tag $ACR_NAME.azurecr.io/api-gateway:$IMAGE_TAG $ACR_NAME.azurecr.io/api-gateway:latest
+          docker push $ACR_NAME.azurecr.io/api-gateway:$IMAGE_TAG
+          docker push $ACR_NAME.azurecr.io/api-gateway:latest
 
       # Deploy services to Azure Container Apps
       - name: Deploy auth-service to Azure Container Apps
@@ -108,37 +119,36 @@ jobs:
           az containerapp update \
             --name auth-service \
             --resource-group $RESOURCE_GROUP \
-            --image $ACR_NAME.azurecr.io/auth-service:v1
+            --image $ACR_NAME.azurecr.io/auth-service:$IMAGE_TAG
 
       - name: Deploy order-service to Azure Container Apps
         run: |
           az containerapp update \
             --name order-service \
             --resource-group $RESOURCE_GROUP \
-            --image $ACR_NAME.azurecr.io/order-service:v1
+            --image $ACR_NAME.azurecr.io/order-service:$IMAGE_TAG
 
       - name: Deploy product-service to Azure Container Apps
         run: |
           az containerapp update \
             --name product-service \
             --resource-group $RESOURCE_GROUP \
-            --image $ACR_NAME.azurecr.io/product-service:v1
+            --image $ACR_NAME.azurecr.io/product-service:$IMAGE_TAG
 
       - name: Deploy cart-service to Azure Container Apps
         run: |
           az containerapp update \
             --name cart-service \
             --resource-group $RESOURCE_GROUP \
-            --image $ACR_NAME.azurecr.io/cart-service:v1
+            --image $ACR_NAME.azurecr.io/cart-service:$IMAGE_TAG
 
       - name: Deploy api-gateway to Azure Container Apps
         run: |
           az containerapp update \
             --name api-gateway \
             --resource-group $RESOURCE_GROUP \
-            --image $ACR_NAME.azurecr.io/api-gateway:v1 \
-            --set-env-vars AUTH_SERVICE_URL="https://auth-service.internal.blueplant-37c9e756.southeastasia.azurecontainerapps.io" ORDER_SERVICE_URL="https://order-service.internal.blueplant-37c9e756.southeastasia.azurecontainerapps.io" PRODUCT_SERVICE_URL="https://product-service.internal.blueplant-37c9e756.southeastasia.azurecontainerapps.io" CART_SERVICE_URL="https://cart-service.internal.blueplant-37c9e756.southeastasia.azurecontainerapps.io" \
-            --no-wait
+            --image $ACR_NAME.azurecr.io/api-gateway:$IMAGE_TAG \
+            --set-env-vars AUTH_SERVICE_URL="https://auth-service.internal.blueplant-37c9e756.southeastasia.azurecontainerapps.io" ORDER_SERVICE_URL="https://order-service.internal.blueplant-37c9e756.southeastasia.azurecontainerapps.io" PRODUCT_SERVICE_URL="https://product-service.internal.blueplant-37c9e756.southeastasia.azurecontainerapps.io" CART_SERVICE_URL="https://cart-service.internal.blueplant-37c9e756.southeastasia.azurecontainerapps.io"
 
       - name: Deployment Success
         run: echo "✅ All services deployed successfully to Azure Container Apps"
