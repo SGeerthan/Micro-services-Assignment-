@@ -8,6 +8,8 @@ import com.stationery.auth_service.entity.User;
 import com.stationery.auth_service.dto.RegisterRequest;
 import com.stationery.auth_service.dto.LoginRequest;
 import com.stationery.auth_service.dto.AuthResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -30,10 +32,10 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         User user = userRepository
                 .findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
 
         if (!user.getPassword().equals(request.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
 
         String token = jwtService.generateToken(user.getEmail(), user.getRole());
@@ -42,6 +44,6 @@ public class AuthService {
 
     public User getUserInfo(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 }
